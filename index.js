@@ -1,27 +1,22 @@
 import express from 'express'
+
 const app = express()
 const port = 3000
 
-app.get('/', (req, res) => {
-    res.send('Hello World! How are you doing?')
+app.disable('x-powered-by')
+
+app.get('/', (req, res, next) => {
+    console.log('Request Ip: ' + req.ip)
+    res.send('Hello World!')
 })
 
-app.get('/contactos/:id/', (req, res, next) => {
-    // res.send(req.params)
-    if (req.params.id === '0') return next()
-    res.send('Soy la página de contactos')
-})
-
-app.get('/contactos/:id/', (req, res) => {
-    res.send('Soy la página de contactos con id 0')
-})
-
-app.get('/', (req, res) => {
-    res.send('Hello World! How are you doing? SECOND')
-})
-
-app.post('/', (req, res) => {
-    res.send('I\'m a POST response ;=)')
+app.use((err, req, res, next) => {
+    console.log('Error: ' + err.message)
+    if (err.status === 404) {
+        res.status(404).send('Data not found')
+    } else {
+        res.status(500).send('Internal Server Error')
+    }
 })
 
 app.listen(port, () => {
