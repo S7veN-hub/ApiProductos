@@ -1,7 +1,7 @@
-import { Client } from 'pg'
+import { Pool } from 'pg'
 import config from '../config.js'
 
-const client = new Client({
+const pool = new Pool({
     user: config.user_db,
     host: config.host_db,
     database: config.database_db,
@@ -9,4 +9,4 @@ const client = new Client({
     port: config.port_db
 })
 
-export default client
+export { pool }
