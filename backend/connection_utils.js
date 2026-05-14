@@ -1,4 +1,5 @@
 import { pool } from '../connection/connection.js'
+import config from '../config.js'
 
 pool.on('connect', () => {
     console.log('Connected to the database')
@@ -19,46 +20,57 @@ async function testingConnection() {
     client.release()
 }
 
-testingConnection()
+// testingConnection()
 
-async function getProductsByType(type) {
+async function getProducts(offset) {
     const client = await pool.connect()
     const query = {
-        text: 'SELECT product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description FROM product INNER JOIN product_detail ON product.product_detail_id = product_detail.product_detail_id WHERE product_type = $1',
-        values: [type]
+        text: 'SELECT product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description FROM product INNER JOIN product_detail ON product.product_detail_id = product_detail.product_detail_id LIMIT $1 OFFSET $2',
+        values: [config.rows_per_page, offset]
     }
     const result = await client.query(query)
     client.release()
     return result.rows
 }
 
-async function getProductsByPriceRange(minPrice, maxPrice) {
+async function getProductsByType(type, offset) {
     const client = await pool.connect()
     const query = {
-        text: 'SELECT product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description FROM product INNER JOIN product_detail ON product.product_detail_id = product_detail.product_detail_id WHERE product_detail.price >= $1 AND product_detail.price <= $2',
-        values: [minPrice, maxPrice]
+        text: 'SELECT product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description FROM product INNER JOIN product_detail ON product.product_detail_id = product_detail.product_detail_id WHERE product.product_type = $1 LIMIT $2 OFFSET $3',
+        values: [type, config.rows_per_page, offset]
     }
     const result = await client.query(query)
     client.release()
     return result.rows
 }
 
-async function getProductsByProductId(productId) {
+async function getProductsByPriceRange(minPrice, maxPrice, offset) {
     const client = await pool.connect()
     const query = {
-        text: 'SELECT product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description FROM product INNER JOIN product_detail ON product.product_detail_id = product_detail.product_detail_id WHERE product.product_id = $1',
-        values: [productId]
+        text: 'SELECT product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description FROM product INNER JOIN product_detail ON product.product_detail_id = product_detail.product_detail_id WHERE product_detail.price >= $1 AND product_detail.price <= $2 LIMIT $3 OFFSET $4',
+        values: [minPrice, maxPrice, config.rows_per_page, offset]
     }
     const result = await client.query(query)
     client.release()
     return result.rows
 }
 
-async function getProductsByProductName(productName) {
+async function getProductsByProductId(type, productId) {
     const client = await pool.connect()
     const query = {
-        text: 'SELECT product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description FROM product INNER JOIN product_detail ON product.product_detail_id = product_detail.product_detail_id WHERE product.name ILIKE $1',
-        values: ['%' + productName + '%']
+        text: 'SELECT product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description FROM product INNER JOIN product_detail ON product.product_detail_id = product_detail.product_detail_id WHERE product.product_type = $1 AND product.product_id = $2',
+        values: [type, productId]
+    }
+    const result = await client.query(query)
+    client.release()
+    return result.rows
+}
+
+async function getProductsByProductName(productName, offset) {
+    const client = await pool.connect()
+    const query = {
+        text: 'SELECT product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description FROM product INNER JOIN product_detail ON product.product_detail_id = product_detail.product_detail_id WHERE product.name LIKE $1 LIMIT $2 OFFSET $3',
+        values: ['%' + productName + '%', config.rows_per_page, offset]
     }
     const result = await client.query(query)
     client.release()
@@ -86,4 +98,6 @@ async function isProductinStock(productIdList) {
     return result.rows.length > 0 ? true : false
 }
 
-export { getProductsByType, getProductsByPriceRange, getProductsByProductId, getProductsByProductName, isProductinStock }
+const connection_utils = { getProductsByType, getProductsByPriceRange, getProductsByProductId, getProductsByProductName, isProductinStock, getProducts }
+
+export default connection_utils
