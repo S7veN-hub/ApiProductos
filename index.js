@@ -1,23 +1,22 @@
 import express from 'express'
 import config from './config.js'
 import productsRouter from './routes/products.js'
+import adminRouter from './routes/admin.js'
 
 const app = express()
 const port = config.server_port
 
 app.disable('x-powered-by')
 
-app.use((req, res, next) => {
-    console.log('Request Ip: ' + req.ip)
-    app.use(express.json());
-    next()
-})
+app.use(express.json())
 
 app.get('/', (req, res, next) => {
     res.send('Home Page')
 })
 
 app.use('/products', productsRouter)
+
+app.use('/admin', adminRouter)
 
 app.use((err, req, res, next) => {
     console.log('Error: ' + err.message)
