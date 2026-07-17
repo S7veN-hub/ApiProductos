@@ -10,6 +10,8 @@ app.disable('x-powered-by')
 
 app.use(express.json())
 
+app.use('/assets', express.static('./assets'))
+
 app.get('/', (req, res, next) => {
     res.send('Home Page')
 })
