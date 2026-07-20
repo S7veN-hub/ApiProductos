@@ -112,6 +112,46 @@ async function addProducts(productList) {
     return isSuccess
 }
 
+async function addNewUser(newUser) {
+    const client = await pool.connect()
+    let result = null
+    let isSuccess = true
+    const query = {
+        text: 'INSERT INTO Users (Name, Email, Password, Role) VALUES ($1, $2, $3, $4)',
+        values: [newUser.name, newUser.email, newUser.password, newUser.role]
+    }
+    try {
+        result = await client.query(query)
+    } catch (err) {
+        isSuccess = false
+        console.log('Error adding new user' + err)
+    }
+    client.release()
+    return isSuccess
+}
+
+async function getLoginUser(email, password) {
+    const client = await pool.connect()
+    const query = {
+        text: 'SELECT Name, Email, Role FROM Users WHERE Email = $1 AND Password = $2',
+        values: [email, password]
+    }
+    const result = await client.query(query)
+    client.release()
+    return result.rows
+}
+
+async function checkIfExistNewUser(email) {
+    const client = await pool.connect()
+    const query = {
+        text: 'SELECT Email FROM Users WHERE Email = $1',
+        values: [email]
+    }
+    const result = await client.query(query)
+    client.release()
+    return result.rows.length > 0 ? true : false
+}
+
 function filterProductFields(product) {
     let isSuccess = true
     if (!product.name || !product.image || !product.type || !product.price || !product.currency) {
@@ -141,6 +181,6 @@ async function isProductinStock(productIdList) {
     return result.rows.length > 0 ? true : false
 }
 
-const connection_utils = { getProductsByType, getProductsByPriceRange, getProductsByProductId, getProductsByProductName, isProductinStock, getProducts, addProducts, decreaseStock, addStock }
+const connection_utils = { getProductsByType, getProductsByPriceRange, getProductsByProductId, getProductsByProductName, getLoginUser, isProductinStock, getProducts, checkIfExistNewUser, addProducts, addNewUser, decreaseStock, addStock }
 
 export default connection_utils
