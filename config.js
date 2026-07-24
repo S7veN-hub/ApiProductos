@@ -7,7 +7,8 @@ const config = {
     server_port: 3000,
     rows_per_page: 10,
     product_types: ['cactus', 'clavel', 'ficus', 'lirio'],
-    select_fields_products: 'SELECT product.product_id as product_id, product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description, product.product_type as type'
+    select_fields_products: 'SELECT product.product_id as product_id, product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description, product.product_type as type',
+    access_control_allow_origin: 'http://localhost:5501'
 }
 
 export default config

@@ -8,6 +8,7 @@ const router = express.Router()
 router.get('/', (req, res, next) => {
     console.log('Products Page')
     let offset = general_utils.calculateOffset(req.query.numberPage)
+    res.header('Access-Control-Allow-Origin', config.access_control_allow_origin)
 
     connection_utils.getProducts(offset)
     .then((data) => {
@@ -19,6 +20,7 @@ router.get('/', (req, res, next) => {
 
 router.get('/search_product', (req, res, next) => {
     console.log('Products by searching product name Page')
+    res.header('Access-Control-Allow-Origin', config.access_control_allow_origin)
     let offset = general_utils.calculateOffset(req.query.numberPage)
     let productName = ''
     if (req.query.product_name) {
@@ -35,6 +37,7 @@ router.get('/search_product', (req, res, next) => {
 
 router.get('/:product_type', (req, res, next) => {
     console.log('Products by type Page')
+    res.header('Access-Control-Allow-Origin', config.access_control_allow_origin)
     let offset = general_utils.calculateOffset(req.query.numberPage)
     let productType = config.product_types[0]
     if (req.params.product_type && config.product_types.includes(req.params.product_type)) {
@@ -51,6 +54,7 @@ router.get('/:product_type', (req, res, next) => {
 
 router.get('/:product_type/:product_id', (req, res, next) => {
     console.log('Products by type and id Page')
+    res.header('Access-Control-Allow-Origin', config.access_control_allow_origin)
     let productType = config.product_types[0]
     let product_id = '';
     if (req.params.product_type && config.product_types.includes(req.params.product_type)) {
