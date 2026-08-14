@@ -117,7 +117,7 @@ async function addNewUser(newUser) {
     let result = null
     let isSuccess = true
     const query = {
-        text: 'INSERT INTO Users (Name, Email, Password, Role) VALUES ($1, $2, $3, $4)',
+        text: 'INSERT INTO Users (Name, Email, Password_Hash, Role) VALUES ($1, $2, $3, $4)',
         values: [newUser.name, newUser.email, newUser.password, newUser.role]
     }
     try {
@@ -130,22 +130,22 @@ async function addNewUser(newUser) {
     return isSuccess
 }
 
-async function getLoginUser(email, password) {
+async function getLoginUser(name, password) {
     const client = await pool.connect()
     const query = {
-        text: 'SELECT Name, Email, Role FROM Users WHERE Email = $1 AND Password = $2',
-        values: [email, password]
+        text: 'SELECT Name, Email, Role FROM Users WHERE Name = $1 AND Password = $2',
+        values: [name, password]
     }
     const result = await client.query(query)
     client.release()
     return result.rows
 }
 
-async function checkIfExistNewUser(email) {
+async function checkIfExistNewUser(email, name) {
     const client = await pool.connect()
     const query = {
-        text: 'SELECT Email FROM Users WHERE Email = $1',
-        values: [email]
+        text: 'SELECT Email FROM Users WHERE Email = $1 OR Name = $2',
+        values: [email, name]
     }
     const result = await client.query(query)
     client.release()

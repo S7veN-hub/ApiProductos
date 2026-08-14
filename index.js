@@ -2,6 +2,8 @@ import express from 'express'
 import config from './config.js'
 import productsRouter from './routes/products.js'
 import adminRouter from './routes/admin.js'
+import loginRouter from './routes/login.js'
+import registerRouter from './routes/register.js'
 
 const app = express()
 const port = config.server_port
@@ -17,6 +19,10 @@ app.get('/', (req, res, next) => {
 })
 
 app.use('/products', productsRouter)
+
+app.use('/register', registerRouter)
+
+app.use('/login', loginRouter)
 
 app.use('/admin', adminRouter)
 
