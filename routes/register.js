@@ -5,6 +5,25 @@ import config from '../config.js'
 
 const router = express.Router()
 
+router.use((req, res, next) => {
+    res.header(
+        'Access-Control-Allow-Origin',
+        config.access_control_allow_origin
+    );
+
+    res.header(
+        'Access-Control-Allow-Methods',
+        'GET, POST, PUT, DELETE, OPTIONS'
+    );
+
+    res.header(
+        'Access-Control-Allow-Headers',
+        'Content-Type'
+    );
+
+    next();
+});
+
 router.post('/check_user', async (req, res, next) => {
     console.log('Register Check User Page')
     const { email, name } = req.body

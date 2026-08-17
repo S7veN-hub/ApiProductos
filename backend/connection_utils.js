@@ -1,5 +1,7 @@
 import { pool } from '../connection/connection.js'
+import bcrypt from 'bcrypt'
 import config from '../config.js'
+import { text } from 'express'
 
 pool.on('connect', () => {
     console.log('Connected to the database')
@@ -116,9 +118,11 @@ async function addNewUser(newUser) {
     const client = await pool.connect()
     let result = null
     let isSuccess = true
+    const passwordHashed = await bcrypt.hash(newUser.password, config.saltRounds)
+
     const query = {
-        text: 'INSERT INTO Users (Name, Email, Password_Hash, Role) VALUES ($1, $2, $3, $4)',
-        values: [newUser.name, newUser.email, newUser.password, newUser.role]
+        text: 'INSERT INTO User_Service (Name, Email, Password_Hash, Role) VALUES ($1, $2, $3, $4)',
+        values: [newUser.name, newUser.email, passwordHashed, newUser.role]
     }
     try {
         result = await client.query(query)
@@ -133,18 +137,26 @@ async function addNewUser(newUser) {
 async function getLoginUser(name, password) {
     const client = await pool.connect()
     const query = {
-        text: 'SELECT Name, Email, Role FROM Users WHERE Name = $1 AND Password = $2',
-        values: [name, password]
+        text: 'SELECT Password_Hash FROM User_Service WHERE Name = $1',
+        values: [name]
     }
     const result = await client.query(query)
+    const user = result.rows[0]
+    const isOk = await bcrypt.compare(password, user.password_hash)
+    if (!isOk) return []
+    const query2 = {
+        text: 'SELECT Name, Email, Role FROM User_Service WHERE Name = $1 AND Password_Hash = $2',
+        values: [name, user.password_hash]
+    }
+    const result2 = await client.query(query2)
     client.release()
-    return result.rows
+    return result2.rows
 }
 
 async function checkIfExistNewUser(email, name) {
     const client = await pool.connect()
     const query = {
-        text: 'SELECT Email FROM Users WHERE Email = $1 OR Name = $2',
+        text: 'SELECT Email FROM User_Service WHERE Email = $1 OR Name = $2',
         values: [email, name]
     }
     const result = await client.query(query)
