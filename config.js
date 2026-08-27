@@ -1,3 +1,6 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 const config = {
     user_db: 'postgres',
     host_db: 'localhost',
@@ -9,7 +12,8 @@ const config = {
     saltRounds: 10,
     product_types: ['cactus', 'clavel', 'ficus', 'lirio'],
     select_fields_products: 'SELECT product.product_id as product_id, product.name as name, product.image as image, product_detail.price as price, product_detail.discount as discount, product_detail.stock as stock, product_detail.currency as currency, product_detail.description as description, product.product_type as type',
-    access_control_allow_origin: 'http://127.0.0.1:5501'
+    access_control_allow_origin: 'http://127.0.0.1:5501',
+    secret_key_jwt: process.env.SECRETKEY_JWT,
 }
 
 export default config

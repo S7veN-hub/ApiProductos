@@ -145,12 +145,87 @@ async function getLoginUser(name, password) {
     const isOk = await bcrypt.compare(password, user.password_hash)
     if (!isOk) return []
     const query2 = {
-        text: 'SELECT Name, Email, Role FROM User_Service WHERE Name = $1 AND Password_Hash = $2',
+        text: 'SELECT User_id, Name, Email, Role FROM User_Service WHERE Name = $1 AND Password_Hash = $2',
         values: [name, user.password_hash]
     }
     const result2 = await client.query(query2)
     client.release()
     return result2.rows
+}
+
+async function createTokens(user) {
+    const accessToken = await jwt.sign({ name: user.name, email: user.email, role: user.role }, config.secret_key_jwt, { expiresIn: '1m' })
+    const sessionUUID = crypto.randomUUID()
+    const refreshToken = await jwt.sign({ name: user.name, email: user.email, role: user.role, sessionId: sessionUUID }, config.secret_key_jwt, { expiresIn: '5m' })
+    return { accessToken, refreshToken, sessionUUID, userObj: user }
+}
+
+async function addSession(user, refreshToken, sessionUUID) {
+    const client = await pool.connect()
+    let result = null
+    let isSuccess = true
+    const refreshToken_hashed = await bcrypt.hash(refreshToken, config.saltRounds)
+    const expirationDate = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes from now
+    const query = {
+        text: 'INSERT INTO User_Session (User_id, Refresh_Token_Hash, Session_Id, Expiration_Date) VALUES ($1, $2, $3, $4)',
+        values: [user.user_id, refreshToken_hashed, sessionUUID, expirationDate]
+    }
+    try {
+        result = await client.query(query)
+    } catch (err) {
+        isSuccess = false
+        console.log('Error adding session' + err)
+    }
+    client.release()
+    return isSuccess
+}
+
+async function checkUserAccess(accessToken) {
+    let user = null
+    jwt.verify(accessToken, config.secret_key_jwt, (err, decoded) => {
+        if (err) {
+            return null // This will exit the callback, but not the outer function
+        }
+        user = decoded
+    })
+    return user
+}
+
+async function refreshToken(refreshToken) {
+    let sessionId = null
+    jwt.verify(refreshToken, config.secret_key_jwt, (err, decoded) => {
+        if (err) {
+            return null
+        }
+        sessionId = decoded.sessionId
+    })
+    if (!sessionId) return null
+    const client = await pool.connect()
+    const query = {
+        text: 'SELECT Session_Id, Revoked_at, User_id, Refresh_Token_Hash, Expiration_Date, Created_at  FROM User_Session WHERE Session_Id = $1',
+        values: [sessionId]
+    }
+    const result = await client.query(query)
+    const session = result.rows[0]
+    if (!validateSession(session)) return null
+    const userQuery = {
+        text: 'SELECT User_id, Name, Email, Role FROM User_Service WHERE User_id = $1',
+        values: [session.user_id]
+    }
+    const userResult = await client.query(userQuery)
+    const user = userResult.rows[0]
+    client.release()
+    let newTokens = await createTokens(user)
+    return newTokens
+}
+
+function validateSession(session) {
+    let isOk = true
+    let now = new Date()
+    if (session.revoked_at || session.expiration_date < now) {
+        isOk = false
+    }
+    return isOk
 }
 
 async function checkIfExistNewUser(email, name) {
@@ -193,6 +268,6 @@ async function isProductinStock(productIdList) {
     return result.rows.length > 0 ? true : false
 }
 
-const connection_utils = { getProductsByType, getProductsByPriceRange, getProductsByProductId, getProductsByProductName, getLoginUser, isProductinStock, getProducts, checkIfExistNewUser, addProducts, addNewUser, decreaseStock, addStock }
+const connection_utils = { getProductsByType, getProductsByPriceRange, getProductsByProductId, getProductsByProductName, getLoginUser, createTokens, addSession, refreshToken, isProductinStock, getProducts, checkIfExistNewUser, addProducts, addNewUser, decreaseStock, addStock, checkUserAccess }
 
 export default connection_utils

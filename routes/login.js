@@ -30,6 +30,29 @@ router.post('/login_user', async (req, res, next) => {
 
     connection_utils.getLoginUser(name, password)
     .then(data => {
+        if (data.length > 0) {
+            connection_utils.createTokens(data[0])
+            .then(tokens => {
+                if (tokens.refreshToken) {
+                    connection_utils.addSession(data[0], tokens.refreshToken, tokens.sessionUUID)
+                    .then(isSuccess => {
+                        if (!isSuccess) {
+                            next(new Error('Failed to add session for user'))
+                        }
+                        res.cookie('accessToken', tokens.accessToken, { httpOnly: true })
+                        res.cookie('refreshToken', tokens.refreshToken, { httpOnly: true })
+                    })
+                    .catch(err => {
+                        next(err)
+                    })
+                } else {
+                    next(new Error('Failed to create tokens for user'))
+                }
+            })
+            .catch(err => {
+                next(err)
+            })
+        }
         res.json(data)
     })
     .catch(err => {

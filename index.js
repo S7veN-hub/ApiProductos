@@ -3,7 +3,9 @@ import config from './config.js'
 import productsRouter from './routes/products.js'
 import adminRouter from './routes/admin.js'
 import loginRouter from './routes/login.js'
+import checkingPermissionRouter from './routes/checking_permission.js'
 import registerRouter from './routes/register.js'
+import refreshRouter from './routes/refresh.js'
 
 const app = express()
 const port = config.server_port
@@ -23,6 +25,10 @@ app.use('/products', productsRouter)
 app.use('/register', registerRouter)
 
 app.use('/login', loginRouter)
+
+app.use('/checking_permission', checkingPermissionRouter)
+
+app.use('/refresh', refreshRouter)
 
 app.use('/admin', adminRouter)
 
