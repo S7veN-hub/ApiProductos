@@ -202,7 +202,7 @@ async function refreshToken(refreshToken) {
     if (!sessionId) return null
     const client = await pool.connect()
     const query = {
-        text: 'SELECT Session_Id, Revoked_at, User_id, Refresh_Token_Hash, Expiration_Date, Created_at  FROM User_Session WHERE Session_Id = $1',
+        text: 'SELECT Session_Id, Revoked_at, User_id, Refresh_Token_Hash, Expiration_Date, Created_at  FROM User_Session WHERE Session_Id = $1 ORDER BY Created_at DESC LIMIT 1',
         values: [sessionId]
     }
     const result = await client.query(query)
