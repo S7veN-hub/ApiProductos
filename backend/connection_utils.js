@@ -170,6 +170,17 @@ async function getLoginUser(name, password) {
     return result2.rows
 }
 
+async function getUserByName(name) {
+    const client = await pool.connect()
+    const query = {
+        text: 'SELECT User_id, Name, Email, Role FROM User_Service WHERE Name = $1',
+        values: [name]
+    }
+    const result = await client.query(query)
+    client.release()
+    return result.rows
+}
+
 async function createTokens(user) {
     const accessToken = await jwt.sign({ name: user.name, email: user.email, role: user.role }, config.secret_key_jwt, { expiresIn: '1m' })
     const sessionUUID = crypto.randomUUID()
@@ -198,13 +209,15 @@ async function addSession(user, refreshToken, sessionUUID) {
 }
 
 async function checkUserAccess(accessToken) {
+    let userName = null
     let user = null
-    jwt.verify(accessToken, config.secret_key_jwt, (err, decoded) => {
+    jwt.verify(accessToken, config.secret_key_jwt, async (err, decoded) => {
         if (err) {
             return null // This will exit the callback, but not the outer function
         }
-        user = decoded
+        userName = decoded.name
     })
+    user = await getUserByName(userName)
     return user
 }
 
