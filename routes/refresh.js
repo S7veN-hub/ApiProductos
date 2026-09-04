@@ -26,7 +26,7 @@ router.use((req, res, next) => {
 
 router.post('/refresh_token', async (req, res, next) => {
     console.log('Refresh Token Page')
-    let user = {}
+    let user = null
     const refreshToken = req.cookies.refreshToken
 
     if (!refreshToken) {
