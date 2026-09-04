@@ -79,6 +79,23 @@ async function getProductsByProductName(productName, offset) {
     return result.rows
 }
 
+async function getProductHistoryByUserId(userId, offset) {
+    const client = await pool.connect()
+    const query = {
+        text: 'SELECT Transaction_Id, Transaction_Date, Amount, Currency, User_Id, Product_Id FROM Transaction WHERE User_Id = $1 ORDER BY Transaction_Date DESC LIMIT $2 OFFSET $3',
+        values: [userId, config.rows_per_page, offset]
+    }
+    const transactions = await client.query(query)
+    const productIds = transactions.rows.map(transaction => transaction.product_id)
+    const productQuery = {
+        text: config.select_fields_products + ' FROM product INNER JOIN product_detail ON product.product_detail_id = product_detail.product_detail_id WHERE product.product_id = ANY($1) LIMIT $2 OFFSET $3',
+        values: [productIds, config.rows_per_page, offset]
+    }
+    const products = await client.query(productQuery)
+    client.release()
+    return products.rows
+}
+
 async function addProducts(productList) {
     const client = await pool.connect()
     await client.query('BEGIN')
@@ -268,6 +285,6 @@ async function isProductinStock(productIdList) {
     return result.rows.length > 0 ? true : false
 }
 
-const connection_utils = { getProductsByType, getProductsByPriceRange, getProductsByProductId, getProductsByProductName, getLoginUser, createTokens, addSession, refreshToken, isProductinStock, getProducts, checkIfExistNewUser, addProducts, addNewUser, decreaseStock, addStock, checkUserAccess }
+const connection_utils = { getProductsByType, getProductsByPriceRange, getProductsByProductId, getProductsByProductName, getLoginUser, createTokens, addSession, refreshToken, isProductinStock, getProducts, getProductHistoryByUserId, checkIfExistNewUser, addProducts, addNewUser, decreaseStock, addStock, checkUserAccess }
 
 export default connection_utils

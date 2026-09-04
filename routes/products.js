@@ -72,6 +72,20 @@ router.get('/:product_type/:product_id', (req, res, next) => {
     })
 })
 
+router.get('/get_product_history/:user_id', (req, res, next) => {
+    console.log('Products history by user id Page')
+    res.header('Access-Control-Allow-Origin', config.access_control_allow_origin)
+    const userId = req.params.user_id
+    const offset = general_utils.calculateOffset(req.query.numberPage)
+
+    connection_utils.getProductHistoryByUserId(userId, offset)
+    .then((data) => {
+        res.json(data)
+    }).catch((err) => {
+        next(err)
+    })
+})
+
 router.use((err, req, res, next) => {
     console.log('Error: ' + err.message)
     if (err.status === 404) {
