@@ -1,6 +1,7 @@
 import { pool } from '../connection/connection.js'
 import bcrypt from 'bcrypt'
 import config from '../config.js'
+import jwt from 'jsonwebtoken'
 import { text } from 'express'
 
 pool.on('connect', () => {
@@ -159,7 +160,7 @@ async function getLoginUser(name, password) {
     }
     const result = await client.query(query)
     const user = result.rows[0]
-    const isOk = await bcrypt.compare(password, user.password_hash)
+    const isOk = await bcrypt.compare(password, user.password_hash);
     if (!isOk) return []
     const query2 = {
         text: 'SELECT User_id, Name, Email, Role FROM User_Service WHERE Name = $1 AND Password_Hash = $2',
@@ -182,9 +183,19 @@ async function getUserByName(name) {
 }
 
 async function createTokens(user) {
-    const accessToken = await jwt.sign({ name: user.name, email: user.email, role: user.role }, config.secret_key_jwt, { expiresIn: '1m' })
+    const accessToken = await new Promise((resolve, reject) => {
+        jwt.sign({ name: user.name, email: user.email, role: user.role }, config.secret_key_jwt, { expiresIn: '1m' }, (err, token) => {
+            if (err) return reject(err)
+            resolve(token)
+        })
+    })
     const sessionUUID = crypto.randomUUID()
-    const refreshToken = await jwt.sign({ name: user.name, email: user.email, role: user.role, sessionId: sessionUUID }, config.secret_key_jwt, { expiresIn: '5m' })
+    const refreshToken = await new Promise((resolve, reject) => {
+        jwt.sign({ name: user.name, email: user.email, role: user.role, sessionId: sessionUUID }, config.secret_key_jwt, { expiresIn: '5m' }, (err, token) => {
+            if (err) return reject(err)
+            resolve(token)
+        })
+    })
     return { accessToken, refreshToken, sessionUUID, userObj: user }
 }
 
@@ -192,10 +203,10 @@ async function addSession(user, refreshToken, sessionUUID) {
     const client = await pool.connect()
     let result = null
     let isSuccess = true
-    const refreshToken_hashed = await bcrypt.hash(refreshToken, config.saltRounds)
+    const refreshToken_hashed = await bcrypt.hash(refreshToken, config.saltRounds);
     const expirationDate = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes from now
     const query = {
-        text: 'INSERT INTO User_Session (User_id, Refresh_Token_Hash, Session_Id, Expiration_Date) VALUES ($1, $2, $3, $4)',
+        text: 'INSERT INTO Sessions (User_id, Refresh_Token_Hash, Session_Id, Expiration_Date) VALUES ($1, $2, $3, $4)',
         values: [user.user_id, refreshToken_hashed, sessionUUID, expirationDate]
     }
     try {
@@ -232,7 +243,7 @@ async function refreshToken(refreshToken) {
     if (!sessionId) return null
     const client = await pool.connect()
     const query = {
-        text: 'SELECT Session_Id, Revoked_at, User_id, Refresh_Token_Hash, Expiration_Date, Created_at  FROM User_Session WHERE Session_Id = $1 ORDER BY Created_at DESC LIMIT 1',
+        text: 'SELECT Session_Id, Revoked_at, User_id, Refresh_Token_Hash, Expiration_Date, Created_at  FROM Sessions WHERE Session_Id = $1 ORDER BY Created_at DESC LIMIT 1',
         values: [sessionId]
     }
     const result = await client.query(query)

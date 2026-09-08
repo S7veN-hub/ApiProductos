@@ -12,6 +12,11 @@ router.use((req, res, next) => {
     );
 
     res.header(
+        'Access-Control-Allow-Credentials',
+        'true'
+    )
+
+    res.header(
         'Access-Control-Allow-Methods',
         'GET, POST, PUT, DELETE, OPTIONS'
     );
@@ -21,7 +26,7 @@ router.use((req, res, next) => {
         'Content-Type'
     );
 
-    next();
+    return next();
 });
 
 router.post('/login_user', async (req, res, next) => {
@@ -37,26 +42,26 @@ router.post('/login_user', async (req, res, next) => {
                     connection_utils.addSession(data[0], tokens.refreshToken, tokens.sessionUUID)
                     .then(isSuccess => {
                         if (!isSuccess) {
-                            next(new Error('Failed to add session for user'))
+                            return next(new Error('Failed to add session for user'))
                         }
-                        res.cookie('accessToken', tokens.accessToken, { httpOnly: true })
-                        res.cookie('refreshToken', tokens.refreshToken, { httpOnly: true })
+                        res.cookie('accessToken', tokens.accessToken, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 60 * 1000 })
+                        res.cookie('refreshToken', tokens.refreshToken, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 5 * 60 * 1000 })
+                        res.json(data)
                     })
                     .catch(err => {
-                        next(err)
+                        return next(err)
                     })
                 } else {
-                    next(new Error('Failed to create tokens for user'))
+                    return next(new Error('Failed to create tokens for user'))
                 }
             })
             .catch(err => {
-                next(err)
+                return next(err)
             })
         }
-        res.json(data)
     })
     .catch(err => {
-        next(err)
+        return next(err)
     })
 })
 

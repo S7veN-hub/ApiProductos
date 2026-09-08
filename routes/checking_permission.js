@@ -12,6 +12,11 @@ router.use((req, res, next) => {
     );
 
     res.header(
+        'Access-Control-Allow-Credentials',
+        'true'
+    )
+
+    res.header(
         'Access-Control-Allow-Methods',
         'GET, POST, PUT, DELETE, OPTIONS'
     );
@@ -21,27 +26,27 @@ router.use((req, res, next) => {
         'Content-Type'
     );
 
-    next();
+    return next();
 })
 
 router.get('/check_user', async (req, res, next) => {
     console.log('Check User Permission Page')
-    const accessToken = req.cookies.accessToken
+    const accessToken = req.cookies?.accessToken
 
     if (!accessToken) {
-        next(new Error('Access token is missing'))
+        return next(new Error('Access token is missing'))
     }
 
     connection_utils.checkUserAccess(accessToken)
     .then(user => {
         if (user) {
-            res.json([user])
+            res.json(user)
         } else {
             window.location.href = document.location.origin + '/refresh/refresh_token'
         }
     })
     .catch(err => {
-        next(err)
+        return next(err)
     })
 })
 

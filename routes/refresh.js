@@ -12,6 +12,11 @@ router.use((req, res, next) => {
     );
 
     res.header(
+        'Access-Control-Allow-Credentials',
+        'true'
+    )
+
+    res.header(
         'Access-Control-Allow-Methods',
         'GET, POST, PUT, DELETE, OPTIONS'
     );
@@ -21,7 +26,7 @@ router.use((req, res, next) => {
         'Content-Type'
     );
 
-    next();
+    return next();
 })
 
 router.post('/refresh_token', async (req, res, next) => {
@@ -30,7 +35,7 @@ router.post('/refresh_token', async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken
 
     if (!refreshToken) {
-        next(new Error('Refresh token is missing'))
+        return next(new Error('Refresh token is missing'))
     }
 
     connection_utils.refreshToken(refreshToken)
@@ -39,22 +44,22 @@ router.post('/refresh_token', async (req, res, next) => {
             connection_utils.addSession(newTokens.userObj, newTokens.refreshToken, newTokens.sessionUUID)
             .then(isSuccess => {
                 if (!isSuccess) {
-                    next(new Error('Failed to add session for user'))
+                    return next(new Error('Failed to add session for user'))
                 }
                 res.cookie('accessToken', newTokens.accessToken, { httpOnly: true })
                 res.cookie('refreshToken', newTokens.refreshToken, { httpOnly: true })
                 user = newTokens.userObj
+                res.json([user])
             })
             .catch(err => {
-                next(err)
+                return next(err)
             })
         } else {
-            next(new Error('Invalid or expired refresh token'))
+            return next(new Error('Invalid or expired refresh token'))
         }
-        res.json([user])
     })
     .catch(err => {
-        next(err)
+        return next(err)
     })
 })
 

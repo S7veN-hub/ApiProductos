@@ -12,6 +12,11 @@ router.use((req, res, next) => {
     );
 
     res.header(
+        'Access-Control-Allow-Credentials',
+        'true'
+    )
+
+    res.header(
         'Access-Control-Allow-Methods',
         'GET, POST, PUT, DELETE, OPTIONS'
     );
@@ -21,7 +26,7 @@ router.use((req, res, next) => {
         'Content-Type'
     );
 
-    next();
+    return next();
 })
 
 router.get('/', (req, res, next) => {
@@ -32,7 +37,7 @@ router.get('/', (req, res, next) => {
     .then((data) => {
         res.json(data)
     }).catch((err) => {
-        next(err)
+        return next(err)
     })
 })
 
@@ -48,7 +53,7 @@ router.get('/search_product', (req, res, next) => {
     .then((data) => {
         res.json(data)
     }).catch((err) => {
-        next(err)
+        return next(err)
     })
 })
 
@@ -64,7 +69,19 @@ router.get('/:product_type', (req, res, next) => {
     .then((data) => {
         res.json(data)
     }).catch((err) => {
-        next(err)
+        return next(err)
+    })
+})
+
+router.get('/get_product_history/:user_id', (req, res, next) => {
+    console.log('Products history by user id Page')
+    const userId = req.params.user_id
+    const offset = general_utils.calculateOffset(req.query.numberPage)
+    connection_utils.getProductHistoryByUserId(userId, offset)
+    .then((data) => {
+        res.json(data)
+    }).catch((err) => {
+        return next(err)
     })
 })
 
@@ -83,20 +100,7 @@ router.get('/:product_type/:product_id', (req, res, next) => {
     .then((data) => {
         res.json(data)
     }).catch((err) => {
-        next(err)
-    })
-})
-
-router.get('/get_product_history/:user_id', (req, res, next) => {
-    console.log('Products history by user id Page')
-    const userId = req.params.user_id
-    const offset = general_utils.calculateOffset(req.query.numberPage)
-
-    connection_utils.getProductHistoryByUserId(userId, offset)
-    .then((data) => {
-        res.json(data)
-    }).catch((err) => {
-        next(err)
+        return next(err)
     })
 })
 

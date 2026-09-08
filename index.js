@@ -1,5 +1,6 @@
 import express from 'express'
 import config from './config.js'
+import cookieParser from 'cookie-parser'
 import productsRouter from './routes/products.js'
 import adminRouter from './routes/admin.js'
 import loginRouter from './routes/login.js'
@@ -13,6 +14,8 @@ const port = config.server_port
 app.disable('x-powered-by')
 
 app.use(express.json())
+
+app.use(cookieParser())
 
 app.use('/assets', express.static('./assets'))
 

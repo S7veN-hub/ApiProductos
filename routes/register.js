@@ -12,6 +12,11 @@ router.use((req, res, next) => {
     );
 
     res.header(
+        'Access-Control-Allow-Credentials',
+        'true'
+    )
+
+    res.header(
         'Access-Control-Allow-Methods',
         'GET, POST, PUT, DELETE, OPTIONS'
     );
@@ -21,7 +26,7 @@ router.use((req, res, next) => {
         'Content-Type'
     );
 
-    next();
+    return next();
 });
 
 router.post('/check_user', async (req, res, next) => {
@@ -33,7 +38,7 @@ router.post('/check_user', async (req, res, next) => {
         res.json({ exists: data })
     })
     .catch(err => {
-        next(err)
+        return next(err)
     })
 })
 
@@ -50,7 +55,7 @@ router.post('/register_user', async (req, res, next) => {
         }
     })
     .catch(err => {
-        next(err)
+        return next(err)
     })
 })
 

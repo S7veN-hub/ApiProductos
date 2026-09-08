@@ -21,13 +21,13 @@ router.post('/add_product', (req, res, next) => {
                     res.status(400).send('Failed to add products')
                 }
             }).catch(err => {
-                next(err)
+                return next(err)
             })
         } else {
             res.status(400).send('Invalid product list')
         }
     } catch (err) {
-        next(err)
+        return next(err)
     }
 })
 
