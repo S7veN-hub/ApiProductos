@@ -42,17 +42,17 @@ router.post('/login_user', async (req, res, next) => {
                     connection_utils.addSession(data[0], tokens.refreshToken, tokens.sessionUUID)
                     .then(isSuccess => {
                         if (!isSuccess) {
-                            return next(new Error('Failed to add session for user'))
+                            return res.status(401).json({ isSuccess: false, message: 'Failed to create a new session for user' })
                         }
-                        res.cookie('accessToken', tokens.accessToken, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 60 * 1000 })
-                        res.cookie('refreshToken', tokens.refreshToken, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 5 * 60 * 1000 })
+                        res.cookie('accessToken', tokens.accessToken, { httpOnly: true, sameSite: 'lax', path: '/' })
+                        res.cookie('refreshToken', tokens.refreshToken, { httpOnly: true, sameSite: 'lax', path: '/' })
                         res.json({ isSuccess: true, data: data })
                     })
                     .catch(err => {
                         return next(err)
                     })
                 } else {
-                    return next(new Error('Failed to create tokens for user'))
+                    res.status(401).json({ isSuccess: false, message: 'Failed to create tokens for user' })
                 }
             })
             .catch(err => {

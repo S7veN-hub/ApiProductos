@@ -31,8 +31,7 @@ router.use((req, res, next) => {
 
 router.post('/refresh_token', async (req, res, next) => {
     console.log('Refresh Token Page')
-    let user = null
-    const refreshToken = req.cookies.refreshToken
+    const refreshToken = req.body.refreshToken
 
     if (!refreshToken) {
         return res.status(401).json({ isSuccess: false, message: 'Refresh token is missing' })
@@ -44,18 +43,15 @@ router.post('/refresh_token', async (req, res, next) => {
             connection_utils.addSession(newTokens.userObj, newTokens.refreshToken, newTokens.sessionUUID)
             .then(isSuccess => {
                 if (!isSuccess) {
-                    return next(new Error('Failed to refresh a new session for user'))
+                    return res.status(401).json({ isSuccess: false, message: 'Failed to create a new session for user' })
                 }
-                res.cookie('accessToken', newTokens.accessToken, { httpOnly: true })
-                res.cookie('refreshToken', newTokens.refreshToken, { httpOnly: true })
-                user = newTokens.userObj
-                res.json({ isSuccess: true, data: user })
+                res.json({ isSuccess: true, data: newTokens })
             })
             .catch(err => {
                 return next(err)
             })
         } else {
-            return next(new Error('Invalid or expired refresh token'))
+            res.status(401).json({ isSuccess: false, message: 'Failed to refresh tokens for user' })
         }
     })
     .catch(err => {

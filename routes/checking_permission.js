@@ -34,15 +34,32 @@ router.get('/check_user', async (req, res, next) => {
     const accessToken = req.cookies?.accessToken
 
     if (!accessToken) {
-        return res.status(100).json({ isSuccess: false, message: 'Access token is missing' })
+        return res.status(401).json({ isSuccess: false, message: 'Access token is missing' })
     }
 
     connection_utils.checkUserAccess(accessToken)
-    .then(user => {
-        if (user) {
+    .then(async user => {
+        if (user && user.length > 0) {
             res.json({ isSuccess: true, data: user})
         } else {
-            res.redirect('/refresh/refresh_token')
+            const response = await fetch(config.apiURL + '/refresh/refresh_token', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    refreshToken: req.cookies?.refreshToken
+                })
+            })
+            const data = await response.json();
+            if (data.isSuccess) {
+                res.cookie('accessToken', data.data.accessToken, { httpOnly: true, sameSite: 'lax', path: '/' })
+                res.cookie('refreshToken', data.data.refreshToken, { httpOnly: true, sameSite: 'lax', path: '/' })
+                res.json({ isSuccess: true, data: [data.data.userObj] })
+            } else {
+                res.status(401).json({ isSuccess: false, message: 'User session has expired' })
+            }
         }
     })
     .catch(err => {

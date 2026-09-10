@@ -234,13 +234,14 @@ async function checkUserAccess(accessToken) {
 }
 
 async function refreshToken(refreshToken) {
-    let sessionId = null
+    let sessionId = null;
     jwt.verify(refreshToken, config.secret_key_jwt, (err, decoded) => {
         if (err) {
             return null
         }
         sessionId = decoded.sessionId
-    })
+    });
+    console.log('Session ID:', sessionId)
     if (!sessionId) return null
     const client = await pool.connect()
     const query = {
@@ -248,7 +249,7 @@ async function refreshToken(refreshToken) {
         values: [sessionId]
     }
     const result = await client.query(query)
-    const session = result.rows[0]
+    const session = result.rows[0];
     if (!validateSession(session)) return null
     const userQuery = {
         text: 'SELECT User_id, Name, Email, Role FROM User_Service WHERE User_id = $1',
