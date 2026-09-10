@@ -35,7 +35,7 @@ router.post('/refresh_token', async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken
 
     if (!refreshToken) {
-        res.sendStatus(401)
+        return res.status(401).json({ isSuccess: false, message: 'Refresh token is missing' })
     }
 
     connection_utils.refreshToken(refreshToken)
@@ -49,7 +49,7 @@ router.post('/refresh_token', async (req, res, next) => {
                 res.cookie('accessToken', newTokens.accessToken, { httpOnly: true })
                 res.cookie('refreshToken', newTokens.refreshToken, { httpOnly: true })
                 user = newTokens.userObj
-                res.json([user])
+                res.json({ isSuccess: true, data: user })
             })
             .catch(err => {
                 return next(err)
@@ -65,7 +65,7 @@ router.post('/refresh_token', async (req, res, next) => {
 
 router.use((err, req, res, next) => {
     console.log('Error: ' + err)
-    res.sendStatus(500)
+    res.status(500).json({ isSuccess: false, message: err.message || 'Internal Server Error' })
 })
 
 export default router

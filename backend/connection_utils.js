@@ -159,6 +159,7 @@ async function getLoginUser(name, password) {
         values: [name]
     }
     const result = await client.query(query)
+    if (result.rows.length === 0) return []
     const user = result.rows[0]
     const isOk = await bcrypt.compare(password, user.password_hash);
     if (!isOk) return []

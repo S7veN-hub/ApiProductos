@@ -16,15 +16,15 @@ router.post('/add_product', (req, res, next) => {
             connection_utils.addProducts(productList)
             .then(isSuccess => {
                 if (isSuccess) {
-                    res.sendStatus(201)
+                    res.status(201).json({ isSuccess: true, message: 'Products added successfully' })
                 } else {
-                    res.sendStatus(400)
+                    res.status(400).json({ isSuccess: false, message: 'Failed to add products' })
                 }
             }).catch(err => {
                 return next(err)
             })
         } else {
-            res.sendStatus(400)
+            res.status(400).json({ isSuccess: false, message: 'Cannot add empty product list' })
         }
     } catch (err) {
         return next(err)
@@ -33,7 +33,7 @@ router.post('/add_product', (req, res, next) => {
 
 router.use((err, req, res, next) => {
     console.log('Error: ' + err)
-    res.sendStatus(500)
+    res.status(500).json({ isSuccess: false, message: err.message || 'Internal Server Error' })
 })
 
 export default router

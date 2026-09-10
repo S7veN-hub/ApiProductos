@@ -14,7 +14,7 @@ router.use('/products', productsRouter)
 
 router.use((err, req, res, next) => {
     console.log('Error: ' + err)
-    res.sendStatus(500)
+    res.status(500).json({ isSuccess: false, message: err.message || 'Internal Server Error' })
 })
 
 export default router

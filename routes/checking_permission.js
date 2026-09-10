@@ -34,13 +34,13 @@ router.get('/check_user', async (req, res, next) => {
     const accessToken = req.cookies?.accessToken
 
     if (!accessToken) {
-        res.sendStatus(100)
+        return res.status(100).json({ isSuccess: false, message: 'Access token is missing' })
     }
 
     connection_utils.checkUserAccess(accessToken)
     .then(user => {
         if (user) {
-            res.json(user)
+            res.json({ isSuccess: true, data: user})
         } else {
             res.redirect('/refresh/refresh_token')
         }
@@ -52,7 +52,7 @@ router.get('/check_user', async (req, res, next) => {
 
 router.use((err, req, res, next) => {
     console.log('Error: ' + err)
-    res.sendStatus(500)
+    res.status(500).json({ isSuccess: false, message: err.message || 'Internal Server Error' })
 })
 
 export default router

@@ -46,7 +46,7 @@ router.post('/login_user', async (req, res, next) => {
                         }
                         res.cookie('accessToken', tokens.accessToken, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 60 * 1000 })
                         res.cookie('refreshToken', tokens.refreshToken, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 5 * 60 * 1000 })
-                        res.json(data)
+                        res.json({ isSuccess: true, data: data })
                     })
                     .catch(err => {
                         return next(err)
@@ -59,7 +59,7 @@ router.post('/login_user', async (req, res, next) => {
                 return next(err)
             })
         } else {
-            res.sendStatus(401)
+            res.status(401).json({ isSuccess: false, message: 'Invalid username or password' })
         }
     })
     .catch(err => {
@@ -69,7 +69,7 @@ router.post('/login_user', async (req, res, next) => {
 
 router.use((err, req, res, next) => {
     console.log('Error: ' + err)
-    res.sendStatus(500)
+    res.status(500).json({ isSuccess: false, message: err.message || 'Internal Server Error' })
 })
 
 export default router

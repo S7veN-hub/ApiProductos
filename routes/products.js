@@ -35,7 +35,7 @@ router.get('/', (req, res, next) => {
 
     connection_utils.getProducts(offset)
     .then((data) => {
-        res.json(data)
+        res.json({ isSuccess: true, data: data })
     }).catch((err) => {
         return next(err)
     })
@@ -51,7 +51,7 @@ router.get('/search_product', (req, res, next) => {
 
     connection_utils.getProductsByProductName(productName, offset)
     .then((data) => {
-        res.json(data)
+        res.json({ isSuccess: true, data: data })
     }).catch((err) => {
         return next(err)
     })
@@ -67,7 +67,7 @@ router.get('/:product_type', (req, res, next) => {
 
     connection_utils.getProductsByType(productType, offset)
     .then((data) => {
-        res.json(data)
+        res.json({ isSuccess: true, data: data })
     }).catch((err) => {
         return next(err)
     })
@@ -79,7 +79,7 @@ router.get('/get_product_history/:user_id', (req, res, next) => {
     const offset = general_utils.calculateOffset(req.query.numberPage)
     connection_utils.getProductHistoryByUserId(userId, offset)
     .then((data) => {
-        res.json(data)
+        res.json({ isSuccess: true, data: data })
     }).catch((err) => {
         return next(err)
     })
@@ -98,7 +98,7 @@ router.get('/:product_type/:product_id', (req, res, next) => {
 
     connection_utils.getProductsByProductId(productType, product_id)
     .then((data) => {
-        res.json(data)
+        res.json({ isSuccess: true, data: data })
     }).catch((err) => {
         return next(err)
     })
@@ -106,7 +106,7 @@ router.get('/:product_type/:product_id', (req, res, next) => {
 
 router.use((err, req, res, next) => {
     console.log('Error: ' + err)
-    res.sendStatus(500)
+    res.status(500).json({ isSuccess: false, message: err.message || 'Internal Server Error' })
 })
 
 export default router
