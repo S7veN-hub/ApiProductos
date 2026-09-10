@@ -13,12 +13,8 @@ router.get('/', (req, res, next) => {
 router.use('/products', productsRouter)
 
 router.use((err, req, res, next) => {
-    console.log('Error: ' + err.message)
-    if (err.status === 404) {
-        res.status(404).send('Data not found')
-    } else {
-        res.status(500).send('Internal Server Error')
-    }
+    console.log('Error: ' + err)
+    res.sendStatus(500)
 })
 
 export default router

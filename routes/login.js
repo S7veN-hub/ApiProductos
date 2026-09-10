@@ -58,6 +58,8 @@ router.post('/login_user', async (req, res, next) => {
             .catch(err => {
                 return next(err)
             })
+        } else {
+            res.sendStatus(401)
         }
     })
     .catch(err => {
@@ -66,12 +68,8 @@ router.post('/login_user', async (req, res, next) => {
 })
 
 router.use((err, req, res, next) => {
-    console.log('Error: ' + err.message)
-    if (err.status === 404) {
-        res.status(404).send('Data not found')
-    } else {
-        res.status(500).send('Internal Server Error')
-    }
+    console.log('Error: ' + err)
+    res.sendStatus(500)
 })
 
 export default router

@@ -35,7 +35,7 @@ router.post('/refresh_token', async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken
 
     if (!refreshToken) {
-        return next(new Error('Refresh token is missing'))
+        res.sendStatus(401)
     }
 
     connection_utils.refreshToken(refreshToken)
@@ -44,7 +44,7 @@ router.post('/refresh_token', async (req, res, next) => {
             connection_utils.addSession(newTokens.userObj, newTokens.refreshToken, newTokens.sessionUUID)
             .then(isSuccess => {
                 if (!isSuccess) {
-                    return next(new Error('Failed to add session for user'))
+                    return next(new Error('Failed to refresh a new session for user'))
                 }
                 res.cookie('accessToken', newTokens.accessToken, { httpOnly: true })
                 res.cookie('refreshToken', newTokens.refreshToken, { httpOnly: true })
@@ -64,12 +64,8 @@ router.post('/refresh_token', async (req, res, next) => {
 })
 
 router.use((err, req, res, next) => {
-    console.log('Error: ' + err.message)
-    if (err.status === 404) {
-        res.status(404).send('Data not found')
-    } else {
-        res.status(500).send('Internal Server Error')
-    }
+    console.log('Error: ' + err)
+    res.sendStatus(500)
 })
 
 export default router

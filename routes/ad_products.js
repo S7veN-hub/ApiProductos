@@ -16,15 +16,15 @@ router.post('/add_product', (req, res, next) => {
             connection_utils.addProducts(productList)
             .then(isSuccess => {
                 if (isSuccess) {
-                    res.status(201).send('Products added successfully')
+                    res.sendStatus(201)
                 } else {
-                    res.status(400).send('Failed to add products')
+                    res.sendStatus(400)
                 }
             }).catch(err => {
                 return next(err)
             })
         } else {
-            res.status(400).send('Invalid product list')
+            res.sendStatus(400)
         }
     } catch (err) {
         return next(err)
@@ -32,12 +32,8 @@ router.post('/add_product', (req, res, next) => {
 })
 
 router.use((err, req, res, next) => {
-    console.log('Error: ' + err.message)
-    if (err.status === 404) {
-        res.status(404).send('Data not found')
-    } else {
-        res.status(500).send('Internal Server Error')
-    }
+    console.log('Error: ' + err)
+    res.sendStatus(500)
 })
 
 export default router
